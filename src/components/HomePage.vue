@@ -82,63 +82,28 @@ export default {
   data() {
     return {
       popularCertificates: [
-        {
-          id: 1,
-          name: '정보처리기사',
-          description: 'IT 분야의 기본 자격증',
-          icon: '💻',
-          students: 1250,
-          rating: 4.8
-        },
-        {
-          id: 2,
-          name: '토익',
-          description: '영어 실력 인증서',
-          icon: '🌍',
-          students: 2100,
-          rating: 4.7
-        },
-        {
-          id: 3,
-          name: '한국사능력검정시험',
-          description: '한국사 기본 지식',
-          icon: '🏛️',
-          students: 890,
-          rating: 4.6
-        }
+        { id: 1, name: '정보처리기사', description: 'IT 분야의 기본 자격증', icon: '💻', students: 1250, rating: 4.8 },
+        { id: 2, name: '토익', description: '영어 실력 인증서', icon: '🌍', students: 2100, rating: 4.7 },
+        { id: 3, name: '한국사능력검정시험', description: '한국사 기본 지식', icon: '🏛️', students: 890, rating: 4.6 }
       ],
       userProgress: [
-        {
-          certId: 1,
-          certName: '정보처리기사',
-          completed: 45,
-          total: 100,
-          percentage: 45
-        },
-        {
-          certId: 2,
-          certName: '토익',
-          completed: 78,
-          total: 120,
-          percentage: 65
-        }
+        { certId: 1, certName: '정보처리기사', completed: 45, total: 100, percentage: 45 },
+        { certId: 2, certName: '토익', completed: 78, total: 120, percentage: 65 }
       ]
     }
   },
   methods: {
     startStudy() {
-      this.$emit('tab-change', 'certificates');
+      this.$router.push({ name: 'certificates' })
     },
     viewCertificates() {
-      this.$emit('tab-change', 'certificates');
+      this.$router.push({ name: 'certificates' })
     },
     selectCertificate(cert) {
-      this.$emit('tab-change', 'study');
-      this.$emit('certificate-selected', cert);
+      this.$router.push({ name: 'study', params: { selectedCertificate: cert } })
     },
     continueStudy(progress) {
-      this.$emit('tab-change', 'study');
-      this.$emit('continue-study', progress);
+      this.$router.push({ name: 'study', params: { selectedCertificate: { id: progress.certId, name: progress.certName } } })
     }
   }
 }
@@ -270,12 +235,12 @@ export default {
   .hero-content h1 {
     font-size: 2rem;
   }
-  
+
   .hero-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .cert-stats {
     flex-direction: column;
     gap: 10px;

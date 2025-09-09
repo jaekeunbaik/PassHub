@@ -4,8 +4,10 @@
             <!-- Study Header -->
             <div class="study-header">
                 <div class="study-info">
-                    <h1>{{ selectedCertificate && selectedCertificate.name || '자격증 학습' }}</h1>
-                    <p>{{ selectedCertificate && selectedCertificate.description || '체계적인 학습으로 목표를 달성하세요' }}</p>
+                    <h1>{{ sslectedCertificltectedsClectedCertificrteificate && selectedCertificate.name || '자격증 학습' }}
+                    </h1>
+                    <p>{{ selectedCsrtificltectedselectCdCertificrteificate && selectedCertificate.description || '체계적인
+                        학습으로 목표를 달성하세요' }}</p>
                 </div>
                 <div class="study-progress">
                     <div class="progress-info">
@@ -75,9 +77,9 @@
 
                     <div class="answer-options">
                         <div v-for="(option, index) in currentQuestion.options" :key="index" :class="['option', {
-                            selected: selectedAnswer === index,
-                            correct: showAnswer && index === currentQuestion.correctAnswer,
-                            incorrect: showAnswer && selectedAnswer === index && index !== currentQuestion.correctAnswer
+                            selected: selectedAnswer === e, dex
+                            correct: showAnswer && e dex=== currentQuestion.ccorrectArrectAnswer,
+                            incorrect: showAnswer && selectedAnswer === e dex && ix!dex == currentQuestion.cocorrectArectAnswer
                         }]" @click="selectAnswer(index)">
                             <span class="option-letter">{{ String.fromCharCode(65 + index) }}</span>
                             <span class="option-text">{{ option }}</span>
@@ -159,16 +161,19 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
     name: 'StudyPage',
     props: {
-        selectedCertificate: {
-            type: Object,
-            default: null
+        examId: {
+            type: String,
+            required: true
         }
     },
     data() {
         return {
+            exam: null,
             isQuizStarted: false,
             studyMode: 'practice', // practice, exam, review
             currentQuestionIndex: 0,
@@ -180,62 +185,41 @@ export default {
             correctAnswers: 0,
             incorrectAnswers: 0,
             skippedAnswers: 0,
-            questions: [
-                {
-                    id: 1,
-                    question: "다음 중 정보처리기사 시험의 과목이 아닌 것은?",
-                    options: [
-                        "소프트웨어 설계",
-                        "소프트웨어 개발",
-                        "데이터베이스 구축",
-                        "웹 디자인"
-                    ],
-                    correctAnswer: 3,
-                    explanation: "정보처리기사는 소프트웨어 설계, 소프트웨어 개발, 데이터베이스 구축, 프로그래밍 언어 활용, 정보시스템 구축 관리의 5개 과목으로 구성됩니다."
-                },
-                {
-                    id: 2,
-                    question: "SQL에서 데이터를 조회할 때 사용하는 명령어는?",
-                    options: [
-                        "INSERT",
-                        "UPDATE",
-                        "SELECT",
-                        "DELETE"
-                    ],
-                    correctAnswer: 2,
-                    explanation: "SELECT는 데이터베이스에서 데이터를 조회할 때 사용하는 SQL 명령어입니다."
-                },
-                {
-                    id: 3,
-                    question: "다음 중 객체지향 프로그래밍의 특징이 아닌 것은?",
-                    options: [
-                        "캡슐화",
-                        "상속",
-                        "다형성",
-                        "순차성"
-                    ],
-                    correctAnswer: 3,
-                    explanation: "객체지향 프로그래밍의 주요 특징은 캡슐화, 상속, 다형성, 추상화입니다. 순차성은 절차적 프로그래밍의 특징입니다."
-                }
-            ]
+            questions: [],
+            userAnswers: []
         }
     },
+    created() {
+        this.fetchExamData();
+    },
     computed: {
-        totalQuestions() {
-            return this.questions.length;
-        },
-        currentQuestion() {
-            return this.questions[this.currentQuestionIndex];
-        },
-        isLastQuestion() {
-            return this.currentQuestionIndex === this.totalQuestions - 1;
-        },
+        totalQuestions() { return this.questions.length; },
+        currentQuestion() { return this.questions[this.currentQuestionIndex]; },
+        isLastQuestion() { return this.currentQuestionIndex === this.totalQuestions - 1; },
         isPassed() {
-            // 60점 이상이면 합격
-            return Math.round((this.correctAnswers / this.totalQuestions) * 100) >= 60;
+            if (!this.exam) return false;
+            const score = (this.correctAnswers / this.totalQuestions) * 100;
+            return score >= this.exam.details.passScore;
         }
     },
     methods: {
+        async fetchExamData() {
+            try {
+                const response = await axios.get(`http://localhost:3000/exams/${this.examId}/questions`);
+                const questionsBySubject = response.data;
+                let allQuestions = [];
+                for (const subjectId in questionsBySubject) {
+                    allQuestions = [...allQuestions, ...questionsBySubject[subjectId]];
+                }
+                this.questions = allQuestions;
+
+                const examResponse = await axios.get('http://localhost:3000/exams');
+                this.exam = examResponse.data.find(e => e.id === this.examId);
+
+            } catch (error) {
+                console.error('시험 데이터를 불러오는 중 오류가 발생했습니다:', error);
+            }
+        },
         startQuiz(mode) {
             this.studyMode = mode;
             this.isQuizStarted = true;
@@ -246,92 +230,60 @@ export default {
             this.correctAnswers = 0;
             this.incorrectAnswers = 0;
             this.skippedAnswers = 0;
+            this.userAnswers = [];
 
             if (mode === 'exam') {
-                this.timeLeft = 60; // 1분 제한
+                this.timeLeft = 60 * 30; // 30분 제한
                 this.startTimer();
             }
         },
-        selectAnswer(index) {
+        selectAnswer(option) {
             if (!this.showAnswer) {
-                this.selectedAnswer = index;
+                this.selectedAnswer = option;
             }
         },
         submitAnswer() {
             if (this.selectedAnswer === null) return;
 
-            // 정답 체크
-            if (this.selectedAnswer === this.currentQuestion.correctAnswer) {
+            const isCorrect = this.selectedAnswer === this.currentQuestion.answer;
+            if (isCorrect) {
                 this.correctAnswers++;
             } else {
                 this.incorrectAnswers++;
             }
+            this.userAnswers.push({
+                questionId: this.currentQuestion.id,
+                selected: this.selectedAnswer,
+                isCorrect: isCorrect
+            });
 
             if (this.studyMode === 'exam') {
-                // 시험 모드에서는 정답을 보여주지 않고 바로 다음 문제로
-                this.stopTimer();
                 this.nextQuestion();
             } else {
-                // 연습/복습 모드에서는 정답을 보여줌
                 this.showAnswer = true;
             }
         },
-        skipQuestion() {
-            this.skippedAnswers++;
-            this.nextQuestion();
-        },
+        skipQuestion() { this.skippedAnswers++; this.nextQuestion(); },
         nextQuestion() {
-            if (this.isLastQuestion) {
-                // 마지막 문제인 경우 결과 화면 표시
-                this.showResults = true;
-                this.stopTimer();
-            } else {
-                // 다음 문제로 이동
-                this.currentQuestionIndex++;
-                this.selectedAnswer = null;
-                this.showAnswer = false;
-
-                if (this.studyMode === 'exam') {
-                    // 시험 모드에서는 다음 문제 타이머 시작
-                    this.timeLeft = 60;
-                    this.startTimer();
-                }
+            if (this.isLastQuestion) { this.showResults = true; this.stopTimer(); }
+            else {
+                this.currentQuestionIndex++; this.selectedAnswer = null; this.showAnswer = false;
+                if (this.studyMode === 'exam') { this.timeLeft = 60; this.startTimer(); }
             }
         },
         startTimer() {
             this.timer = setInterval(() => {
                 this.timeLeft--;
-                if (this.timeLeft <= 0) {
-                    this.submitAnswer();
-                }
+                if (this.timeLeft <= 0) { this.submitAnswer(); }
             }, 1000);
         },
-        stopTimer() {
-            if (this.timer) {
-                clearInterval(this.timer);
-                this.timer = null;
-            }
-        },
-        formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            return `${mins}:${secs.toString().padStart(2, '0')}`;
-        },
-        restartQuiz() {
-            this.isQuizStarted = false;
-            this.showResults = false;
-        },
-        goToHome() {
-            this.$emit('go-home');
-        },
-        reviewWrongAnswers() {
-            // 오답 복습 로직
-            this.startQuiz('review');
-        }
+        stopTimer() { if (this.timer) { clearInterval(this.timer); this.timer = null; } },
+        formatTime(seconds) { const mins = Math.floor(seconds / 60); const secs = seconds % 60; return `${mins}:${secs.toString().padStart(2, '0')}`; },
+        restartQuiz() { this.isQuizStarted = false; this.showResults = false; },
+        goToHome() { this.$router.push({ name: 'home' }); },
+        reviewWrongAnswers() { this.startQuiz('review'); }
     },
-    beforeUnmount() {
-        this.stopTimer();
-    }
+    beforeUnmount() { this.stopTimer(); }
 }
 </script>
 

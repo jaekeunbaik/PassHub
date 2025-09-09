@@ -7,18 +7,11 @@
           <p>자격증 공부의 모든 것</p>
         </div>
         <nav class="nav">
-          <a href="#" class="nav-link" @click="setActiveTab('home')" :class="{ active: activeTab === 'home' }">
-            홈
-          </a>
-          <a href="#" class="nav-link" @click="setActiveTab('certificates')" :class="{ active: activeTab === 'certificates' }">
-            자격증
-          </a>
-          <a href="#" class="nav-link" @click="setActiveTab('study')" :class="{ active: activeTab === 'study' }">
-            학습
-          </a>
-          <a href="#" class="nav-link" @click="setActiveTab('progress')" :class="{ active: activeTab === 'progress' }">
-            진도
-          </a>
+          <router-link to="/" class="nav-link" :class="{ active: $route.name === 'home' }">홈</router-link>
+          <router-link to="/certificates" class="nav-link"
+            :class="{ active: $route.name === 'certificates' }">자격증</router-link>
+          <router-link to="/study" class="nav-link" :class="{ active: $route.name === 'study' }">학습</router-link>
+          <router-link to="/progress" class="nav-link" :class="{ active: $route.name === 'progress' }">진도</router-link>
         </nav>
       </div>
     </div>
@@ -27,18 +20,7 @@
 
 <script>
 export default {
-  name: 'AppHeader',
-  data() {
-    return {
-      activeTab: 'home'
-    }
-  },
-  methods: {
-    setActiveTab(tab) {
-      this.activeTab = tab;
-      this.$emit('tab-change', tab);
-    }
-  }
+  name: 'AppHeader'
 }
 </script>
 
@@ -94,11 +76,11 @@ export default {
     flex-direction: column;
     gap: 20px;
   }
-  
+
   .nav {
     gap: 15px;
   }
-  
+
   .logo h1 {
     font-size: 1.5rem;
   }

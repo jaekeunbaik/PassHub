@@ -2,26 +2,17 @@
   <div class="certificate-list">
     <div class="container">
       <h1 class="text-center mb-4">자격증 목록</h1>
-      
+
       <!-- Search and Filter -->
       <div class="search-filter">
         <div class="search-box">
-          <input 
-            type="text" 
-            v-model="searchQuery" 
-            placeholder="자격증명으로 검색..."
-            class="search-input"
-          >
+          <input type="text" v-model="searchQuery" placeholder="자격증명으로 검색..." class="search-input">
           <button class="search-btn">🔍</button>
         </div>
-        
+
         <div class="filter-buttons">
-          <button 
-            v-for="category in categories" 
-            :key="category.id"
-            @click="setActiveCategory(category.id)"
-            :class="['filter-btn', { active: activeCategory === category.id }]"
-          >
+          <button v-for="category in categories" :key="category.id" @click="setActiveCategory(category.id)"
+            :class="['filter-btn', { active: activeCategory === category.id }]">
             {{ category.name }}
           </button>
         </div>
@@ -29,21 +20,17 @@
 
       <!-- Certificate Grid -->
       <div class="certificate-grid">
-        <div 
-          v-for="cert in filteredCertificates" 
-          :key="cert.id"
-          class="certificate-item"
-          @click="selectCertificate(cert)"
-        >
+        <div v-for="cert in filteredCertificates" :key="cert.id" class="certificate-item"
+          @click="selectCertificate(cert)">
           <div class="cert-header">
             <div class="cert-icon">{{ cert.icon }}</div>
             <div class="cert-badge" v-if="cert.isPopular">인기</div>
           </div>
-          
+
           <div class="cert-content">
             <h3>{{ cert.name }}</h3>
             <p class="cert-description">{{ cert.description }}</p>
-            
+
             <div class="cert-details">
               <div class="detail-item">
                 <span class="detail-label">난이도:</span>
@@ -51,18 +38,18 @@
                   <span v-for="i in 5" :key="i" :class="['star', { filled: i <= cert.difficulty }]">★</span>
                 </div>
               </div>
-              
+
               <div class="detail-item">
                 <span class="detail-label">문제 수:</span>
                 <span>{{ cert.questionCount }}문제</span>
               </div>
-              
+
               <div class="detail-item">
                 <span class="detail-label">학습자:</span>
                 <span>{{ cert.students }}명</span>
               </div>
             </div>
-            
+
             <div class="cert-stats">
               <div class="stat">
                 <span class="stat-value">{{ cert.rating }}</span>
@@ -74,7 +61,7 @@
               </div>
             </div>
           </div>
-          
+
           <div class="cert-footer">
             <button class="btn btn-primary" @click.stop="startStudy(cert)">
               학습 시작
@@ -90,6 +77,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   name: 'CertificateList',
   data() {
@@ -99,125 +88,54 @@ export default {
       categories: [
         { id: 'all', name: '전체' },
         { id: 'it', name: 'IT/컴퓨터' },
-        { id: 'language', name: '어학' },
-        { id: 'business', name: '경영/사무' },
-        { id: 'design', name: '디자인' },
-        { id: 'education', name: '교육' }
       ],
-      certificates: [
-        {
-          id: 1,
-          name: '정보처리기사',
-          description: 'IT 분야의 기본이 되는 국가기술자격증',
-          icon: '💻',
-          category: 'it',
-          difficulty: 4,
-          questionCount: 100,
-          students: 1250,
-          rating: 4.8,
-          passRate: 65,
-          isPopular: true
-        },
-        {
-          id: 2,
-          name: '토익',
-          description: '영어 실력을 객관적으로 측정하는 시험',
-          icon: '🌍',
-          category: 'language',
-          difficulty: 3,
-          questionCount: 120,
-          students: 2100,
-          rating: 4.7,
-          passRate: 78,
-          isPopular: true
-        },
-        {
-          id: 3,
-          name: '한국사능력검정시험',
-          description: '한국사에 대한 기본 지식과 이해도 측정',
-          icon: '🏛️',
-          category: 'education',
-          difficulty: 2,
-          questionCount: 50,
-          students: 890,
-          rating: 4.6,
-          passRate: 82,
-          isPopular: false
-        },
-        {
-          id: 4,
-          name: '컴활 1급',
-          description: '컴퓨터 활용능력 1급 자격증',
-          icon: '📊',
-          category: 'it',
-          difficulty: 3,
-          questionCount: 80,
-          students: 650,
-          rating: 4.5,
-          passRate: 70,
-          isPopular: false
-        },
-        {
-          id: 5,
-          name: 'GTQ 1급',
-          description: '그래픽기술자격 1급',
-          icon: '🎨',
-          category: 'design',
-          difficulty: 4,
-          questionCount: 60,
-          students: 420,
-          rating: 4.4,
-          passRate: 58,
-          isPopular: false
-        },
-        {
-          id: 6,
-          name: '워드프로세서',
-          description: '워드프로세서 활용능력 자격증',
-          icon: '📝',
-          category: 'business',
-          difficulty: 2,
-          questionCount: 40,
-          students: 780,
-          rating: 4.3,
-          passRate: 85,
-          isPopular: false
-        }
-      ]
+      certificates: []
     }
+  },
+  created() {
+    this.fetchCertificates();
   },
   computed: {
     filteredCertificates() {
       let filtered = this.certificates;
-      
-      // 카테고리 필터
-      if (this.activeCategory !== 'all') {
-        filtered = filtered.filter(cert => cert.category === this.activeCategory);
-      }
-      
-      // 검색어 필터
       if (this.searchQuery) {
-        filtered = filtered.filter(cert => 
-          cert.name.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-          cert.description.toLowerCase().includes(this.searchQuery.toLowerCase())
+        filtered = filtered.filter(cert =>
+          cert.name.toLowerCase().includes(this.searchQuery.toLowerCase())
         );
       }
-      
       return filtered;
     }
   },
   methods: {
+    async fetchCertificates() {
+      try {
+        const response = await axios.get('http://localhost:3000/exams');
+        this.certificates = response.data.map(cert => ({
+          ...cert,
+          description: `${cert.name} ${cert.type} 시험입니다.`,
+          icon: '💻',
+          questionCount: cert.details.totalQuestions,
+          difficulty: 3, // 기본값
+          students: 0, // 기본값
+          rating: 4.5, // 기본값
+          passRate: 75, // 기본값
+          isPopular: false // 기본값
+        }));
+      } catch (error) {
+        console.error('시험 목록을 불러오는 중 오류가 발생했습니다:', error);
+      }
+    },
     setActiveCategory(categoryId) {
       this.activeCategory = categoryId;
     },
     selectCertificate(cert) {
-      this.$emit('certificate-selected', cert);
+      this.$router.push({ name: 'study', params: { examId: cert.id } });
     },
     startStudy(cert) {
-      this.$emit('start-study', cert);
+      this.$router.push({ name: 'study', params: { examId: cert.id } });
     },
     viewDetails(cert) {
-      this.$emit('view-details', cert);
+      console.log('view details', cert)
     }
   }
 }
@@ -423,17 +341,17 @@ export default {
   .certificate-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .search-filter {
     align-items: stretch;
   }
-  
+
   .filter-buttons {
     justify-content: flex-start;
     overflow-x: auto;
     padding-bottom: 10px;
   }
-  
+
   .cert-footer {
     flex-direction: column;
   }

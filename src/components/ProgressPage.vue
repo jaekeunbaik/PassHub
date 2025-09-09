@@ -2,7 +2,7 @@
   <div class="progress-page">
     <div class="container">
       <h1 class="text-center mb-4">학습 진도 관리</h1>
-      
+
       <!-- Overall Progress Summary -->
       <div class="progress-summary">
         <div class="summary-card">
@@ -35,11 +35,7 @@
       <div class="certificate-progress">
         <h2>자격증별 진도</h2>
         <div class="progress-cards">
-          <div 
-            v-for="progress in certificateProgress" 
-            :key="progress.certId"
-            class="progress-card"
-          >
+          <div v-for="progress in certificateProgress" :key="progress.certId" class="progress-card">
             <div class="card-header">
               <div class="cert-info">
                 <div class="cert-icon">{{ progress.icon }}</div>
@@ -52,11 +48,11 @@
                 {{ progress.percentage }}%
               </div>
             </div>
-            
+
             <div class="progress-bar">
               <div class="progress-fill" :style="{ width: progress.percentage + '%' }"></div>
             </div>
-            
+
             <div class="progress-details">
               <div class="detail-row">
                 <span>완료된 문제</span>
@@ -75,7 +71,7 @@
                 <span>{{ progress.lastStudy }}</span>
               </div>
             </div>
-            
+
             <div class="card-actions">
               <button class="btn btn-primary" @click="continueStudy(progress)">
                 학습 계속하기
@@ -96,19 +92,15 @@
             <div class="stat-icon">📈</div>
             <h3>주간 학습 현황</h3>
             <div class="weekly-chart">
-              <div 
-                v-for="(day, index) in weeklyData" 
-                :key="index"
-                class="chart-bar"
+              <div v-for="(day, index) in weeklyData" :key="index" class="chart-bar"
                 :style="{ height: (day.studyTime / maxWeeklyTime) * 100 + '%' }"
-                :title="`${day.day}: ${day.studyTime}분`"
-              ></div>
+                :title="`${day.day}: ${day.studyTime}분`"></div>
             </div>
             <div class="chart-labels">
               <span v-for="day in weeklyData" :key="day.day">{{ day.day }}</span>
             </div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-icon">🎯</div>
             <h3>목표 달성률</h3>
@@ -129,17 +121,13 @@
               </div>
             </div>
           </div>
-          
+
           <div class="stat-card">
             <div class="stat-icon">🏆</div>
             <h3>성취 배지</h3>
             <div class="badges">
-              <div 
-                v-for="badge in badges" 
-                :key="badge.id"
-                :class="['badge', { earned: badge.earned }]"
-                :title="badge.description"
-              >
+              <div v-for="badge in badges" :key="badge.id" :class="['badge', { earned: badge.earned }]"
+                :title="badge.description">
                 <div class="badge-icon">{{ badge.icon }}</div>
                 <span class="badge-name">{{ badge.name }}</span>
               </div>
@@ -152,11 +140,7 @@
       <div class="weak-areas" v-if="weakAreas.length > 0">
         <h2>약점 분석</h2>
         <div class="weakness-cards">
-          <div 
-            v-for="area in weakAreas" 
-            :key="area.id"
-            class="weakness-card"
-          >
+          <div v-for="area in weakAreas" :key="area.id" class="weakness-card">
             <div class="weakness-header">
               <h3>{{ area.topic }}</h3>
               <span class="accuracy">{{ area.accuracy }}%</span>
@@ -181,16 +165,11 @@
             <button class="btn btn-secondary" @click="nextMonth">›</button>
           </div>
           <div class="calendar-grid">
-            <div class="calendar-day" 
-                 v-for="day in calendarDays" 
-                 :key="day.date"
-                 :class="{ 
-                   'has-study': day.hasStudy, 
-                   'today': day.isToday,
-                   'other-month': !day.isCurrentMonth
-                 }"
-                 @click="viewDayDetails(day)"
-            >
+            <div class="calendar-day" v-for="day in calendarDays" :key="day.date" :class="{
+              'has-study': day.hasStudy,
+              'today': day.isToday,
+              'other-month': !day.isCurrentMonth
+            }" @click="viewDayDetails(day)">
               <span class="day-number">{{ day.day }}</span>
               <div class="study-indicator" v-if="day.hasStudy">
                 <div class="study-dot" :style="{ backgroundColor: day.studyColor }"></div>
@@ -213,42 +192,9 @@ export default {
       overallAccuracy: 80.8,
       totalStudyTime: '12시간 30분',
       certificateProgress: [
-        {
-          certId: 1,
-          certName: '정보처리기사',
-          category: 'IT/컴퓨터',
-          icon: '💻',
-          completed: 45,
-          total: 100,
-          percentage: 45,
-          accuracy: 78,
-          studyTime: '5시간 20분',
-          lastStudy: '2일 전'
-        },
-        {
-          certId: 2,
-          certName: '토익',
-          category: '어학',
-          icon: '🌍',
-          completed: 78,
-          total: 120,
-          percentage: 65,
-          accuracy: 85,
-          studyTime: '4시간 15분',
-          lastStudy: '1일 전'
-        },
-        {
-          certId: 3,
-          certName: '한국사능력검정시험',
-          category: '교육',
-          icon: '🏛️',
-          completed: 25,
-          total: 50,
-          percentage: 50,
-          accuracy: 72,
-          studyTime: '2시간 55분',
-          lastStudy: '3일 전'
-        }
+        { certId: 1, certName: '정보처리기사', category: 'IT/컴퓨터', icon: '💻', completed: 45, total: 100, percentage: 45, accuracy: 78, studyTime: '5시간 20분', lastStudy: '2일 전' },
+        { certId: 2, certName: '토익', category: '어학', icon: '🌍', completed: 78, total: 120, percentage: 65, accuracy: 85, studyTime: '4시간 15분', lastStudy: '1일 전' },
+        { certId: 3, certName: '한국사능력검정시험', category: '교육', icon: '🏛️', completed: 25, total: 50, percentage: 50, accuracy: 72, studyTime: '2시간 55분', lastStudy: '3일 전' }
       ],
       weeklyData: [
         { day: '월', studyTime: 45 },
@@ -266,22 +212,11 @@ export default {
         { id: 2, name: '10문제 달성', icon: '🔥', earned: true, description: '10문제를 풀었습니다' },
         { id: 3, name: '50문제 달성', icon: '💪', earned: true, description: '50문제를 풀었습니다' },
         { id: 4, name: '100문제 달성', icon: '🏆', earned: false, description: '100문제를 풀었습니다' },
-        { id: 5, name: '연속 학습', icon: '📅', earned: true, description: '3일 연속 학습했습니다' },
-        { id: 6, name: '완벽한 하루', icon: '⭐', earned: false, description: '하루 목표를 100% 달성했습니다' }
+        { id: 5, name: '연속 학습', icon: '📅', earned: true, description: '3일 연속 학습했습니다' }
       ],
       weakAreas: [
-        {
-          id: 1,
-          topic: '데이터베이스',
-          accuracy: 45,
-          description: 'SQL 쿼리 작성과 데이터베이스 설계 부분에서 어려움을 겪고 있습니다.'
-        },
-        {
-          id: 2,
-          topic: '네트워크',
-          accuracy: 52,
-          description: '네트워크 프로토콜과 보안 관련 문제에서 정답률이 낮습니다.'
-        }
+        { id: 1, topic: '데이터베이스', accuracy: 45, description: 'SQL 쿼리 작성과 데이터베이스 설계 부분에서 어려움을 겪고 있습니다.' },
+        { id: 2, topic: '네트워크', accuracy: 52, description: '네트워크 프로토콜과 보안 관련 문제에서 정답률이 낮습니다.' }
       ],
       currentMonth: '2024년 1월',
       calendarDays: []
@@ -297,34 +232,22 @@ export default {
   },
   methods: {
     continueStudy(progress) {
-      this.$emit('continue-study', progress);
+      this.$router.push({ name: 'study', params: { selectedCertificate: { id: progress.certId, name: progress.certName } } })
     },
     viewDetails(progress) {
-      this.$emit('view-details', progress);
+      console.log('progress details', progress)
     },
     practiceWeakness(area) {
-      this.$emit('practice-weakness', area);
+      this.$router.push({ name: 'study', params: { selectedCertificate: { id: 0, name: `${area.topic} 집중 연습` } } })
     },
-    previousMonth() {
-      // 이전 달로 이동하는 로직
-      console.log('Previous month');
-    },
-    nextMonth() {
-      // 다음 달로 이동하는 로직
-      console.log('Next month');
-    },
-    viewDayDetails(day) {
-      if (day.hasStudy) {
-        this.$emit('view-day-details', day);
-      }
-    },
+    previousMonth() { console.log('Previous month') },
+    nextMonth() { console.log('Next month') },
+    viewDayDetails(day) { if (day.hasStudy) { console.log('Day details', day) } },
     generateCalendar() {
-      // 캘린더 생성 로직 (간단한 예시)
       const days = [];
       const today = new Date();
-      
       for (let i = 1; i <= 31; i++) {
-        const hasStudy = Math.random() > 0.3; // 70% 확률로 학습 기록
+        const hasStudy = Math.random() > 0.3;
         days.push({
           date: `2024-01-${i.toString().padStart(2, '0')}`,
           day: i,
@@ -334,7 +257,6 @@ export default {
           studyColor: hasStudy ? '#28a745' : '#6c757d'
         });
       }
-      
       this.calendarDays = days;
     }
   }
@@ -732,23 +654,23 @@ export default {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .progress-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .card-actions {
     flex-direction: column;
   }
-  
+
   .calendar-grid {
     gap: 2px;
   }
-  
+
   .calendar-day {
     font-size: 12px;
   }
