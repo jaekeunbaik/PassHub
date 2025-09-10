@@ -1,19 +1,21 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import HomePage from '../components/HomePage.vue';
-import CertificateList from '../components/CertificateList.vue';
-import StudyPage from '../components/StudyPage.vue';
-import ProgressPage from '../components/ProgressPage.vue';
+import { createRouter, createWebHistory } from "vue-router";
+import HomePage from "../components/HomePage.vue";
+import CertificateList from "../components/CertificateList.vue";
+import StudyPage from "../components/StudyPage.vue";
+import ProgressPage from "../components/ProgressPage.vue";
+import AdminPage from "../components/AdminPage.vue";
 
 const routes = [
-  { path: '/', name: 'home', component: HomePage },
-  { path: '/certificates', name: 'certificates', component: CertificateList },
+  { path: "/", name: "home", component: HomePage },
+  { path: "/certificates", name: "certificates", component: CertificateList },
   {
-    path: '/study/:examId',
-    name: 'study',
+    path: "/study/:examId",
+    name: "study",
     component: StudyPage,
     props: true,
   },
-  { path: '/progress', name: 'progress', component: ProgressPage },
+  { path: "/progress", name: "progress", component: ProgressPage },
+  { path: "/admin", name: "admin", component: AdminPage },
 ];
 
 const router = createRouter({

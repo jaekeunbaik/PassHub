@@ -1,13 +1,15 @@
 <template>
     <div class="study-page">
         <div class="container">
+            <div v-if="isLoading" class="loading-indicator">
+                <h2>데이터를 불러오는 중...</h2>
+            </div>
             <!-- Study Header -->
-            <div class="study-header">
+            <div v-else class="study-header">
                 <div class="study-info">
-                    <h1>{{ sslectedCertificltectedsClectedCertificrteificate && selectedCertificate.name || '자격증 학습' }}
+                    <h1>{{ (exam && exam.name) || '자격증 학습' }}
                     </h1>
-                    <p>{{ selectedCsrtificltectedselectCdCertificrteificate && selectedCertificate.description || '체계적인
-                        학습으로 목표를 달성하세요' }}</p>
+                    <p>{{ (exam && exam.description) || '체계적인 학습으로 목표를 달성하세요' }}</p>
                 </div>
                 <div class="study-progress">
                     <div class="progress-info">
@@ -59,7 +61,7 @@
             </div>
 
             <!-- Quiz Interface -->
-            <div class="quiz-interface" v-if="isQuizStarted">
+            <div class="quiz-interface" v-if="isQuizStarted && currentQuestion">
                 <div class="question-card">
                     <div class="question-header">
                         <div class="question-number">문제 {{ currentQuestionIndex + 1 }}</div>
@@ -77,9 +79,9 @@
 
                     <div class="answer-options">
                         <div v-for="(option, index) in currentQuestion.options" :key="index" :class="['option', {
-                            selected: selectedAnswer === e, dex
-                            correct: showAnswer && e dex=== currentQuestion.ccorrectArrectAnswer,
-                            incorrect: showAnswer && selectedAnswer === e dex && ix!dex == currentQuestion.cocorrectArectAnswer
+                            selected: selectedAnswer === index,
+                            correct: showAnswer && index === correctAnswerIndex,
+                            incorrect: showAnswer && selectedAnswer === index && index !== correctAnswerIndex
                         }]" @click="selectAnswer(index)">
                             <span class="option-letter">{{ String.fromCharCode(65 + index) }}</span>
                             <span class="option-text">{{ option }}</span>
@@ -97,7 +99,7 @@
 
                     <!-- Answer Explanation -->
                     <div class="explanation" v-if="showAnswer">
-                        <h4>정답: {{ String.fromCharCode(65 + currentQuestion.correctAnswer) }}</h4>
+                        <h4>정답: {{ String.fromCharCode(65 + correctAnswerIndex) }}</h4>
                         <p>{{ currentQuestion.explanation }}</p>
                         <button class="btn btn-success" @click="nextQuestion">
                             {{ isLastQuestion ? '결과 보기' : '다음 문제' }}
@@ -174,6 +176,7 @@ export default {
     data() {
         return {
             exam: null,
+            isLoading: true,
             isQuizStarted: false,
             studyMode: 'practice', // practice, exam, review
             currentQuestionIndex: 0,
@@ -196,6 +199,10 @@ export default {
         totalQuestions() { return this.questions.length; },
         currentQuestion() { return this.questions[this.currentQuestionIndex]; },
         isLastQuestion() { return this.currentQuestionIndex === this.totalQuestions - 1; },
+        correctAnswerIndex() {
+            if (!this.currentQuestion) return -1;
+            return this.currentQuestion.options.indexOf(this.currentQuestion.answer);
+        },
         isPassed() {
             if (!this.exam) return false;
             const score = (this.correctAnswers / this.totalQuestions) * 100;
@@ -204,6 +211,7 @@ export default {
     },
     methods: {
         async fetchExamData() {
+            this.isLoading = true;
             try {
                 const response = await axios.get(`http://localhost:3000/exams/${this.examId}/questions`);
                 const questionsBySubject = response.data;
@@ -218,6 +226,8 @@ export default {
 
             } catch (error) {
                 console.error('시험 데이터를 불러오는 중 오류가 발생했습니다:', error);
+            } finally {
+                this.isLoading = false;
             }
         },
         startQuiz(mode) {
@@ -245,7 +255,7 @@ export default {
         submitAnswer() {
             if (this.selectedAnswer === null) return;
 
-            const isCorrect = this.selectedAnswer === this.currentQuestion.answer;
+            const isCorrect = this.selectedAnswer === this.correctAnswerIndex;
             if (isCorrect) {
                 this.correctAnswers++;
             } else {
@@ -272,6 +282,7 @@ export default {
             }
         },
         startTimer() {
+            if (this.timer) return;
             this.timer = setInterval(() => {
                 this.timeLeft--;
                 if (this.timeLeft <= 0) { this.submitAnswer(); }
@@ -288,6 +299,13 @@ export default {
 </script>
 
 <style scoped>
+.loading-indicator {
+    text-align: center;
+    padding: 50px;
+    font-size: 1.5rem;
+    color: #666;
+}
+
 .study-page {
     padding: 40px 0;
 }

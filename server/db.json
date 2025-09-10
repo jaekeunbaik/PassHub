@@ -24,7 +24,11 @@
       "details": {
         "totalQuestions": 200,
         "subjects": [
-          { "id": "S06", "name": "Listening Comprehension", "questionCount": 100 },
+          {
+            "id": "S06",
+            "name": "Listening Comprehension",
+            "questionCount": 100
+          },
           { "id": "S07", "name": "Reading Comprehension", "questionCount": 100 }
         ],
         "passScore": 700
@@ -53,14 +57,16 @@
       "subjectId": "S01",
       "question": "요구사항 분석에서 비기능적 요구사항이 아닌 것은?",
       "options": ["성능", "보안", "사용자 인터페이스", "신뢰성"],
-      "answer": "사용자 인터페이스"
+      "answer": "사용자 인터페이스",
+      "explanation": "비기능은 성능/보안/신뢰성과 같은 품질 속성이며, UI는 기능적 요구사항에 해당합니다."
     },
     {
       "id": "Q0002",
       "subjectId": "S01",
       "question": "객체지향 프로그래밍의 특징이 아닌 것은?",
       "options": ["캡슐화", "상속", "다형성", "절차지향"],
-      "answer": "절차지향"
+      "answer": "절차지향",
+      "explanation": "절차지향은 OOP의 특징이 아니라 절차 중심 패러다임입니다. OOP의 3요소는 캡슐화/상속/다형성입니다."
     },
     {
       "id": "Q0101",
@@ -72,21 +78,29 @@
         "테스팅은 개발 초기 단계에서 시작해야 한다.",
         "테스팅은 결함이 없음을 증명하는 활동이다."
       ],
-      "answer": "테스팅은 결함이 없음을 증명하는 활동이다."
+      "answer": "테스팅은 결함이 없음을 증명하는 활동이다.",
+      "explanation": "테스팅은 결함 존재 가능성을 드러내는 활동이며, 결함의 부재를 증명할 수는 없습니다."
     },
     {
       "id": "Q0201",
       "subjectId": "S06",
       "question": "What is the main topic of the conversation?",
-      "options": ["A new project", "A marketing campaign", "A company merger", "A budget report"],
-      "answer": "A marketing campaign"
+      "options": [
+        "A new project",
+        "A marketing campaign",
+        "A company merger",
+        "A budget report"
+      ],
+      "answer": "A marketing campaign",
+      "explanation": "대화의 핵심은 새로 진행할 마케팅 캠페인에 대한 논의였습니다."
     },
     {
       "id": "Q0301",
       "subjectId": "S08",
       "question": "빅데이터 분석과제가 아닌 것은?",
       "options": ["분류", "예측", "군집", "최적화"],
-      "answer": "최적화"
+      "answer": "최적화",
+      "explanation": "분류/예측/군집은 전형적 분석 과제이고, 최적화는 의사결정/운영연구 영역에 가깝습니다."
     }
   ]
 }
