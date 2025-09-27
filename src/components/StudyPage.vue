@@ -14,11 +14,11 @@
                 <div class="study-progress">
                     <div class="progress-info">
                         <span>{{ currentQuestionIndex + 1 }} / {{ totalQuestions }}</span>
-                        <span>{{ Math.round(((currentQuestionIndex + 1) / totalQuestions) * 100) }}%</span>
+                        <span>{{ safeProgressPercent }}%</span>
                     </div>
                     <div class="progress-bar">
                         <div class="progress-fill"
-                            :style="{ width: ((currentQuestionIndex + 1) / totalQuestions) * 100 + '%' }"></div>
+                            :style="{ width: safeProgressPercent + '%' }"></div>
                     </div>
                 </div>
             </div>
@@ -163,7 +163,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { supabase } from '../lib/supabase';
 
 export default {
     name: 'StudyPage',
@@ -199,6 +199,11 @@ export default {
         totalQuestions() { return this.questions.length; },
         currentQuestion() { return this.questions[this.currentQuestionIndex]; },
         isLastQuestion() { return this.currentQuestionIndex === this.totalQuestions - 1; },
+        safeProgressPercent() {
+            const total = this.totalQuestions;
+            if (!total) return 0;
+            return Math.round(((this.currentQuestionIndex + 1) / total) * 100);
+        },
         correctAnswerIndex() {
             if (!this.currentQuestion) return -1;
             return this.currentQuestion.options.indexOf(this.currentQuestion.answer);
@@ -213,18 +218,125 @@ export default {
         async fetchExamData() {
             this.isLoading = true;
             try {
-                const response = await axios.get(`http://localhost:3000/exams/${this.examId}/questions`);
-                const questionsBySubject = response.data;
+                // 1) 시험 메타데이터 조회
+                // 단일: id로 조회
+                const { data: examRows, error: examErr } = await supabase
+                    .from('exams')
+                    .select('*')
+                    .eq('id', this.examId)
+                    .limit(1);
+                if (examErr) throw examErr;
+                const rawExam = examRows && examRows.length > 0 ? examRows[0] : null;
+
+                this.exam = rawExam ? (() => {
+                    const baseDetails = rawExam.details ?? rawExam.details_json ?? rawExam.meta ?? null;
+                    const synthesized = {
+                        totalQuestions: rawExam.total_questions ?? undefined,
+                        passScore: rawExam.pass_score ?? undefined,
+                        subjectPassScore: rawExam.subject_pass_score ?? undefined,
+                    };
+                    return {
+                        id: rawExam.id ?? rawExam.exam_id ?? rawExam.code ?? rawExam.slug,
+                        name: rawExam.name ?? rawExam.exam_name ?? rawExam.title ?? '',
+                        type: rawExam.type ?? rawExam.exam_type ?? undefined,
+                        details: baseDetails ? baseDetails : synthesized,
+                    };
+                })() : null;
+
+                // 2) 과목 리스트 추출 (exams.details가 비어있으면 subjects 테이블에서 조회)
+                let subjects = this.exam?.details?.subjects || this.exam?.details?.Subjects || [];
+                if (!subjects || subjects.length === 0) {
+                    const { data: subjectRows, error: subjErr } = await supabase
+                        .from('subjects')
+                        .select('*')
+                        .eq('exam_id', this.examId);
+                    if (subjErr) {
+                        // eslint-disable-next-line no-console
+                        console.warn('과목 조회 중 경고:', subjErr);
+                    }
+                    subjects = (subjectRows || []).map(r => ({
+                        id: r.id,
+                        name: r.name ?? r.title ?? '',
+                        questionCount: r.questionCount ?? r.question_count ?? 0
+                    }));
+                }
+                const subjectIds = subjects.map(s => s.id);
+
+                // 3) 질문 조회 (subjectId IN (...))
                 let allQuestions = [];
-                for (const subjectId in questionsBySubject) {
-                    allQuestions = [...allQuestions, ...questionsBySubject[subjectId]];
+                if (subjectIds.length > 0) {
+                    // 우선 subjectId 컬럼으로 조회
+                    let { data: questionRows, error: qErr } = await supabase
+                        .from('questions')
+                        .select('*')
+                        .in('subjectId', subjectIds);
+                    // 컬럼이 없다면 subject_id로 재시도
+                    if (qErr || !questionRows) {
+                        const { data: questionRows2, error: qErr2 } = await supabase
+                            .from('questions')
+                            .select('*')
+                            .in('subject_id', subjectIds);
+                        if (qErr2) throw qErr2;
+                        questionRows = questionRows2;
+                    }
+
+                    // 과목별 제한 수만큼 슬라이스
+                    const questionsBySubject = {};
+                    for (const subj of subjects) {
+                        const perSubject = (questionRows || []).filter(q => (q.subjectId ?? q.subject_id) === subj.id);
+                        // 간단 셔플
+                        const shuffled = [...perSubject].sort(() => 0.5 - Math.random());
+                        const declaredLimit = (subj.questionCount ?? subj.question_count);
+                        // 정보처리기사(C001): 과목당 5문제(10개 예제 중 랜덤 5개 가정)
+                        const enforcedLimit = (this.exam?.id === 'C001') ? 5 : undefined;
+                        const limit = (typeof enforcedLimit === 'number')
+                            ? enforcedLimit
+                            : (typeof declaredLimit === 'number' && declaredLimit > 0 ? declaredLimit : undefined);
+                        questionsBySubject[subj.id] = (typeof limit === 'number')
+                            ? shuffled.slice(0, Math.min(limit, shuffled.length))
+                            : shuffled; // 개수 정보가 없으면 전부 사용
+                    }
+                    for (const sid of Object.keys(questionsBySubject)) {
+                        allQuestions = [...allQuestions, ...questionsBySubject[sid].map(q => ({
+                            id: q.id,
+                            subjectId: q.subjectId ?? q.subject_id,
+                            question: q.question ?? q.title ?? '',
+                            options: q.options ?? q.choices ?? [],
+                            answer: q.answer ?? q.correct ?? '',
+                            explanation: q.explanation ?? q.explain ?? '',
+                            image: q.image ?? null
+                        }))];
+                    }
                 }
                 this.questions = allQuestions;
 
-                const examResponse = await axios.get('http://localhost:3000/exams');
-                this.exam = examResponse.data.find(e => e.id === this.examId);
+                // 4) Supabase에서 비어오면 로컬 서버로 폴백 시도
+                if (!this.questions || this.questions.length === 0) {
+                    try {
+                        // 시험 메타 폴백
+                        if (!this.exam) {
+                            const examsRes = await fetch('http://localhost:3000/exams');
+                            if (examsRes.ok) {
+                                const examsJson = await examsRes.json();
+                                const found = (examsJson || []).find(e => e.id === this.examId);
+                                if (found) this.exam = found;
+                            }
+                        }
+                        // 질문 폴백
+                        const qRes = await fetch(`http://localhost:3000/exams/${this.examId}/questions`);
+                        if (qRes.ok) {
+                            const questionsBySubject = await qRes.json();
+                            let merged = [];
+                            for (const sid in questionsBySubject) {
+                                merged = [...merged, ...questionsBySubject[sid]];
+                            }
+                            if (merged.length > 0) this.questions = merged;
+                        }
+                    } catch (_) { /* ignore */ }
+                }
 
             } catch (error) {
+                // eslint-disable-next-line no-console
                 console.error('시험 데이터를 불러오는 중 오류가 발생했습니다:', error);
             } finally {
                 this.isLoading = false;

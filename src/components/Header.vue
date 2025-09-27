@@ -10,7 +10,7 @@
           <router-link to="/" class="nav-link" :class="{ active: $route.name === 'home' }">홈</router-link>
           <router-link to="/certificates" class="nav-link"
             :class="{ active: $route.name === 'certificates' }">자격증</router-link>
-          <router-link to="/study" class="nav-link" :class="{ active: $route.name === 'study' }">학습</router-link>
+          <router-link to="/certificates" class="nav-link" :class="{ active: $route.name === 'certificates' }">학습</router-link>
           <router-link to="/progress" class="nav-link" :class="{ active: $route.name === 'progress' }">진도</router-link>
         </nav>
       </div>

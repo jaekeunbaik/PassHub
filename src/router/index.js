@@ -8,6 +8,7 @@ import AdminPage from "../components/AdminPage.vue";
 const routes = [
   { path: "/", name: "home", component: HomePage },
   { path: "/certificates", name: "certificates", component: CertificateList },
+  { path: "/study", redirect: { name: "certificates" } },
   {
     path: "/study/:examId",
     name: "study",

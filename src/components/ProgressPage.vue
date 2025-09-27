@@ -232,13 +232,13 @@ export default {
   },
   methods: {
     continueStudy(progress) {
-      this.$router.push({ name: 'study', params: { selectedCertificate: { id: progress.certId, name: progress.certName } } })
+      this.$router.push({ name: 'study', params: { examId: String(progress.certId).startsWith('C') ? progress.certId : `C00${progress.certId}` } })
     },
     viewDetails(progress) {
       console.log('progress details', progress)
     },
-    practiceWeakness(area) {
-      this.$router.push({ name: 'study', params: { selectedCertificate: { id: 0, name: `${area.topic} 집중 연습` } } })
+    practiceWeakness() {
+      this.$router.push({ name: 'certificates' })
     },
     previousMonth() { console.log('Previous month') },
     nextMonth() { console.log('Next month') },

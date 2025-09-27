@@ -77,7 +77,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import { supabase } from '../lib/supabase';
 
 export default {
   name: 'CertificateList',
@@ -109,19 +109,34 @@ export default {
   methods: {
     async fetchCertificates() {
       try {
-        const response = await axios.get('http://localhost:3000/exams');
-        this.certificates = response.data.map(cert => ({
-          ...cert,
-          description: `${cert.name} ${cert.type} 시험입니다.`,
-          icon: '💻',
-          questionCount: cert.details.totalQuestions,
-          difficulty: 3, // 기본값
-          students: 0, // 기본값
-          rating: 4.5, // 기본값
-          passRate: 75, // 기본값
-          isPopular: false // 기본값
-        }));
+        const { data, error } = await supabase
+          .from('exams')
+          .select('*');
+        if (error) throw error;
+        this.certificates = (data || []).map(row => {
+          const examId = row.id ?? row.exam_id ?? row.code ?? row.slug;
+          const examName = row.name ?? row.exam_name ?? row.title ?? '';
+          const examType = row.type ?? row.exam_type ?? '';
+          const details = row.details ?? row.details_json ?? row.meta ?? null;
+          const totalQuestions = (details?.totalQuestions ?? details?.total_questions ?? row.total_questions) ?? 0;
+          const passScore = (details?.passScore ?? details?.pass_score ?? row.pass_score) ?? undefined;
+          return {
+            id: examId,
+            name: examName,
+            type: examType,
+            details: details || { totalQuestions, passScore },
+            description: `${examName} ${examType}`.trim() ? `${examName} ${examType} 시험입니다.` : `${examName} 시험입니다.`,
+            icon: '💻',
+            questionCount: totalQuestions,
+            difficulty: 3,
+            students: 0,
+            rating: 4.5,
+            passRate: 75,
+            isPopular: false
+          }
+        });
       } catch (error) {
+        // eslint-disable-next-line no-console
         console.error('시험 목록을 불러오는 중 오류가 발생했습니다:', error);
       }
     },
