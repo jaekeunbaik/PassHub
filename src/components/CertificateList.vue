@@ -6,13 +6,22 @@
       <!-- Search and Filter -->
       <div class="search-filter">
         <div class="search-box">
-          <input type="text" v-model="searchQuery" placeholder="자격증명으로 검색..." class="search-input">
+          <input
+            type="text"
+            v-model="searchQuery"
+            placeholder="자격증명으로 검색..."
+            class="search-input"
+          />
           <button class="search-btn">🔍</button>
         </div>
 
         <div class="filter-buttons">
-          <button v-for="category in categories" :key="category.id" @click="setActiveCategory(category.id)"
-            :class="['filter-btn', { active: activeCategory === category.id }]">
+          <button
+            v-for="category in categories"
+            :key="category.id"
+            @click="setActiveCategory(category.id)"
+            :class="['filter-btn', { active: activeCategory === category.id }]"
+          >
             {{ category.name }}
           </button>
         </div>
@@ -20,8 +29,12 @@
 
       <!-- Certificate Grid -->
       <div class="certificate-grid">
-        <div v-for="cert in filteredCertificates" :key="cert.id" class="certificate-item"
-          @click="selectCertificate(cert)">
+        <div
+          v-for="cert in filteredCertificates"
+          :key="cert.id"
+          class="certificate-item"
+          @click="selectCertificate(cert)"
+        >
           <div class="cert-header">
             <div class="cert-icon">{{ cert.icon }}</div>
             <div class="cert-badge" v-if="cert.isPopular">인기</div>
@@ -35,7 +48,12 @@
               <div class="detail-item">
                 <span class="detail-label">난이도:</span>
                 <div class="difficulty-stars">
-                  <span v-for="i in 5" :key="i" :class="['star', { filled: i <= cert.difficulty }]">★</span>
+                  <span
+                    v-for="i in 5"
+                    :key="i"
+                    :class="['star', { filled: i <= cert.difficulty }]"
+                    >★</span
+                  >
                 </div>
               </div>
 
@@ -77,20 +95,21 @@
 </template>
 
 <script>
-import { supabase } from '../lib/supabase';
+import { supabase } from "../lib/supabase";
+import axios from "axios";
 
 export default {
-  name: 'CertificateList',
+  name: "CertificateList",
   data() {
     return {
-      searchQuery: '',
-      activeCategory: 'all',
+      searchQuery: "",
+      activeCategory: "all",
       categories: [
-        { id: 'all', name: '전체' },
-        { id: 'it', name: 'IT/컴퓨터' },
+        { id: "all", name: "전체" },
+        { id: "it", name: "IT/컴퓨터" },
       ],
-      certificates: []
-    }
+      certificates: [],
+    };
   },
   created() {
     this.fetchCertificates();
@@ -99,61 +118,87 @@ export default {
     filteredCertificates() {
       let filtered = this.certificates;
       if (this.searchQuery) {
-        filtered = filtered.filter(cert =>
+        filtered = filtered.filter((cert) =>
           cert.name.toLowerCase().includes(this.searchQuery.toLowerCase())
         );
       }
       return filtered;
-    }
+    },
   },
   methods: {
     async fetchCertificates() {
       try {
-        const { data, error } = await supabase
-          .from('exams')
-          .select('*');
+        const { data, error } = await supabase.from("exams").select("*");
         if (error) throw error;
-        this.certificates = (data || []).map(row => {
+        this.certificates = (data || []).map((row) => {
           const examId = row.id ?? row.exam_id ?? row.code ?? row.slug;
-          const examName = row.name ?? row.exam_name ?? row.title ?? '';
-          const examType = row.type ?? row.exam_type ?? '';
+          const examName = row.name ?? row.exam_name ?? row.title ?? "";
+          const examType = row.type ?? row.exam_type ?? "";
           const details = row.details ?? row.details_json ?? row.meta ?? null;
-          const totalQuestions = (details?.totalQuestions ?? details?.total_questions ?? row.total_questions) ?? 0;
-          const passScore = (details?.passScore ?? details?.pass_score ?? row.pass_score) ?? undefined;
+          const totalQuestions =
+            details?.totalQuestions ??
+            details?.total_questions ??
+            row.total_questions ??
+            0;
+          const passScore =
+            details?.passScore ??
+            details?.pass_score ??
+            row.pass_score ??
+            undefined;
           return {
             id: examId,
             name: examName,
             type: examType,
             details: details || { totalQuestions, passScore },
-            description: `${examName} ${examType}`.trim() ? `${examName} ${examType} 시험입니다.` : `${examName} 시험입니다.`,
-            icon: '💻',
+            description: `${examName} ${examType}`.trim()
+              ? `${examName} ${examType} 시험입니다.`
+              : `${examName} 시험입니다.`,
+            icon: "💻",
             questionCount: totalQuestions,
             difficulty: 3,
             students: 0,
             rating: 4.5,
             passRate: 75,
-            isPopular: false
-          }
+            isPopular: false,
+          };
         });
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.error('시험 목록을 불러오는 중 오류가 발생했습니다:', error);
+        console.error("시험 목록을 불러오는 중 오류가 발생했습니다:", error);
+      }
+      try {
+        const response = await axios.get(
+          "https://passhub-backend-production.up.railway.app/exams"
+        );
+        this.certificates = response.data.map((cert) => ({
+          ...cert,
+          description: `${cert.name} ${cert.type} 시험입니다.`,
+          icon: "💻",
+          questionCount: cert.details.totalQuestions,
+          difficulty: 3, // 기본값
+          students: 0, // 기본값
+          rating: 4.5, // 기본값
+          passRate: 75, // 기본값
+          isPopular: false, // 기본값
+        }));
+      } catch (error) {
+        console.error("시험 목록을 불러오는 중 오류가 발생했습니다:", error);
       }
     },
     setActiveCategory(categoryId) {
       this.activeCategory = categoryId;
     },
     selectCertificate(cert) {
-      this.$router.push({ name: 'study', params: { examId: cert.id } });
+      this.$router.push({ name: "study", params: { examId: cert.id } });
     },
     startStudy(cert) {
-      this.$router.push({ name: 'study', params: { examId: cert.id } });
+      this.$router.push({ name: "study", params: { examId: cert.id } });
     },
     viewDetails(cert) {
-      console.log('view details', cert)
-    }
-  }
-}
+      console.log("view details", cert);
+    },
+  },
+};
 </script>
 
 <style scoped>
