@@ -164,7 +164,10 @@ export default {
         });
       } catch (error) {
         // eslint-disable-next-line no-console
-        console.error("시험 목록을 불러오는 중 오류가 발생했습니다:", error);
+        console.error(
+          "시험 목록을 불러오는 중 오류가 발생했습니다: CHK",
+          error
+        );
       }
       try {
         const response = await axios.get(
